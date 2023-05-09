@@ -156,11 +156,6 @@ void CPlayerStateScript::update()
 			GetOwner()->MeshRender()->GetMaterial()->SetScalarParam(SCALAR_PARAM::INT_0, &m_iDamaged);
 	}
 
-
-	Vec2 Resolution = CDevice::GetInst()->GetRenderResolution();
-	Vec2 MousePos = CKeyMgr::GetInst()->GetMousePos();
-	m_MousePos = Vec2(MousePos.x - Resolution.x / 2.f, -MousePos.y + Resolution.y / 2.f);
-
 	if (m_eStateType == PLAYER_TYPE::IDLE || m_eStateType == PLAYER_TYPE::WALK)
 		m_HandCheck = true;
 	else
@@ -195,6 +190,11 @@ void CPlayerStateScript::update()
 		Dead();
 		break;
 	}
+	case PLAYER_TYPE::WAIT:
+	{
+		Idle();
+		break;
+	}
 	}
 
 }
@@ -224,8 +224,6 @@ void CPlayerStateScript::lateupdate()
 		else
 			ChangeState(PLAYER_TYPE::WALK);
 	}
-	//else
-	//	ChangeState(PLAYER_TYPE::IDLE);
 }
 
 
@@ -475,6 +473,7 @@ void CPlayerStateScript::Fall()
 		ChangeState(PLAYER_TYPE::IDLE);
 	}
 }
+
 
 CGameObject* CPlayerStateScript::FindWeaponWithName(wstring GunName)
 {

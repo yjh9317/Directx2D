@@ -27,6 +27,7 @@ CCameraMoveScript::CCameraMoveScript()
 	, m_Event(false)
 	, m_fTime(0.f)
 	, m_BossPos{}
+	, m_fEventTime(6.f)
 {
 }
 
@@ -44,13 +45,8 @@ void CCameraMoveScript::start()
 		pPostProcess->AddComponent(new CTransform);
 		pPostProcess->AddComponent(new CMeshRender);
 
-
-		//pPostProcess->Transform()->SetRelativePos(0.f, 0.f, 100.f);
-		//pPostProcess->Transform()->SetRelativeScale(200.f, 200.f, 1.f);
-
 		pPostProcess->MeshRender()->SetMesh(CResMgr::GetInst()->FindRes<CMesh>(L"RectMesh"));
 		pPostProcess->MeshRender()->SetSharedMaterial(CResMgr::GetInst()->FindRes<CMaterial>(L"material\\PostProcessMtrl.mtrl"));
-
 		
 		tEventInfo tevninfo;
 		
@@ -60,9 +56,29 @@ void CCameraMoveScript::start()
 
 		CEventMgr::GetInst()->AddEvent(tevninfo);
 		pPostProcess->Deactivate();
-		
 		((CCameraMoveScript*)GetOwner()->GetScript(0))->SetFilter(pPostProcess);
 	}
+
+	if (nullptr == m_pPlayer)
+	{
+		CScene* pScene = CSceneMgr::GetInst()->GetCurScene();
+		CLayer* pLayer = pScene->GetLayer(3);
+
+		vector<CGameObject*> vRoot = pLayer->GetRootObjects();
+		for (int i = 0; i < vRoot.size(); ++i)
+		{
+			if (vRoot[i]->GetName() == L"Player")
+			{
+				m_pPlayer = vRoot[i];
+			}
+		}
+	}
+
+	CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+	if (pCurScene->GetSceneState() == SCENE_STATE::PLAY)
+		m_PlayerTrace = true;
+	else
+		m_PlayerTrace = false;
 }
 
 void CCameraMoveScript::update()
@@ -137,6 +153,13 @@ void CCameraMoveScript::update()
 		}
 	}
 
+	CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+	if (KEY_TAP(KEY::_9) && pCurScene->GetSceneState() != SCENE_STATE::PLAY)
+	{
+		m_PlayerTrace = !m_PlayerTrace;
+	}
+
+
 	if (m_Filter != nullptr)
 	{
 
@@ -149,14 +172,14 @@ void CCameraMoveScript::update()
 				return;
 
 			CPlayerStateScript* pScript = pPlayer->GetScript<CPlayerStateScript>();
-			vector<CGameObject*> vBlankObj = pScript->GetBlankBullet();
-			size_t _size = vBlankObj.size();
-			if (_size == 0)
-				return;
-			CGameObject* Obj = vBlankObj[_size - 1];
-			vBlankObj.pop_back();
-			pScript->SetBlankBullet(vBlankObj);
-			Obj->Destroy();
+			vector<CGameObject*>& vBlankObj = pScript->GetBlankBullet();
+			size_t BlankSize = vBlankObj.size();
+			if (BlankSize > 0)
+			{
+				CGameObject* Obj = vBlankObj.back();
+				vBlankObj.pop_back();
+				Obj->Destroy();
+			}
 
 
 			if (m_Filter->IsActive())
@@ -169,19 +192,8 @@ void CCameraMoveScript::update()
 				m_bDistortion = !m_bDistortion;
 			}
 
-			CScene* pScene = CSceneMgr::GetInst()->GetCurScene();
-			vector<CGameObject*> vObj = pScene->GetLayer(6)->GetRootObjects();
-			if (vObj.size() > 0)
-			{
-				for (int i = 0; i < vObj.size(); ++i)
-				{
-					vObj[i]->Destroy();
-				}
-			}
-
+			// ø÷∞Ó Ω¶¿Ã¥ı
 			Ptr<CPrefab> pPrefab = CResMgr::GetInst()->FindRes<CPrefab>(L"prefab\\BlankBulletEffect.pref");
-
-
 			CGameObject* pObj = pPrefab->Instantiate();
 
 			tEventInfo tevninfo;
@@ -190,9 +202,7 @@ void CCameraMoveScript::update()
 			tevninfo.eType = EVENT_TYPE::CREATE_OBJ;
 			tevninfo.lParam = (DWORD_PTR)pObj;
 			tevninfo.wParam = 7;
-
 			CEventMgr::GetInst()->AddEvent(tevninfo);
-
 			Ptr<CSound> pSound = CResMgr::GetInst()->Load<CSound>(L"sound\\BlankBullet\\Sound.wav", L"sound\\BlankBullet\\Sound.wav");
 			pSound->Play(1, 0.1f, true);
 		}
@@ -218,46 +228,16 @@ void CCameraMoveScript::update()
 		}
 	}
 
-	if (KEY_TAP(KEY::_9))
+	if (m_PlayerTrace && m_pPlayer)
 	{
-		m_PlayerTrace = !m_PlayerTrace;
-	}
-
-	CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
-
-	if (pCurScene->GetSceneState() == SCENE_STATE::PLAY)
-	{
-		m_PlayerTrace = true;
-	}
-
-	if (m_PlayerTrace)
-	{
-
-		CScene* pScene = CSceneMgr::GetInst()->GetCurScene();
-		CLayer* pLayer= pScene->GetLayer(3);
-
-		vector<CGameObject*> vRoot = pLayer->GetRootObjects();
-		CGameObject* pObj = nullptr;
-
-		for (int i = 0; i < vRoot.size(); ++i)
-		{
-			if (vRoot[i]->GetName() == L"Player")
-				pObj = vRoot[i];
-		}
-
-		if (pObj == nullptr)
-			return;
-		
-		
-		CGameObject* pPlayer = pScene->GetPlayer();
-		Vec3 pPlayerPos = pPlayer->Transform()->GetWorldPos();
+		Vec3 pPlayerPos = m_pPlayer->Transform()->GetWorldPos();
 		Vec2 vResolution = CDevice::GetInst()->GetRenderResolution();
 		Vec2 vMousePos = CKeyMgr::GetInst()->GetMousePos();
 
 		Vec2 vWinMouse = Vec2(vMousePos.x - vResolution.x / 2.f, vMousePos.y - vResolution.y / 2.f);
 		vWinMouse /= 6.f;
 		vPos = Vec3(pPlayerPos.x + vWinMouse.x, pPlayerPos.y - vWinMouse.y, 0.f);
-		
+		Transform()->SetRelativePos(vPos);
 	}
 
 
@@ -266,34 +246,31 @@ void CCameraMoveScript::update()
 		m_PlayerTrace = false;
 		m_fTime += DT;
 
-		if (m_fTime > 6.f)
+		CPlayerStateScript* pScript = m_pPlayer->GetScript<CPlayerStateScript>();
+		pScript->SetState(PLAYER_TYPE::WAIT);
+
+		if (m_fTime > m_fEventTime)
 		{
 			m_fTime = 0.f;
 			m_Event = false;
 			m_BossPos = {};
 			m_PlayerTrace = true;
+			pScript->SetState(PLAYER_TYPE::IDLE);
 		}
 		Vec3 vPlayerPos = CSceneMgr::GetInst()->GetCurScene()->GetPlayerPos();
-
 		Vec2 vDir = Vec2(m_BossPos.x - vPlayerPos.x, m_BossPos.y - vPlayerPos.y);
 		vDir.Normalize();
+		double PlayerBossDist = sqrt(pow(vPlayerPos.x - m_BossPos.x, 2) + pow(vPlayerPos.y - m_BossPos.y, 2));
 
 		Vec3 vPos = Transform()->GetRelativePos();
-		//vPos.x += vDir.x * 150.f*DT;
-		//vPos.y += vDir.y * 150.f*DT;
+		vPos.x += vDir.x *(PlayerBossDist / m_fEventTime) * DT * 3;
+		vPos.y += vDir.y * (PlayerBossDist / m_fEventTime) * DT * 3;
 
-		if (m_fTime < 2.f)
-		{
-			vPos.x += vDir.x * 250.f * DT;
-			vPos.y += vDir.y * 250.f * DT;
-		}
+		double CameraBossDist = sqrt(pow(vPos.x - m_BossPos.x, 2) + pow(vPos.y - m_BossPos.y, 2));
 
+		if(CameraBossDist >= 10.f)
 		Transform()->SetRelativePos(vPos);
-
 	}
-	else
-		Transform()->SetRelativePos(vPos);
-
 
 }
 
@@ -341,7 +318,6 @@ void CCameraMoveScript::lateupdate()
 		vPos.y += vCamHeight / 2.f - 100.f;
 
 		vPos.x += 50 + (50 * _pScript->GetNum());
-
 		v2[i]->Transform()->SetRelativePos(vPos);
 	}
 }

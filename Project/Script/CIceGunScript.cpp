@@ -75,7 +75,7 @@ void CIceGunScript::update()
 
 		Transform()->SetIgnoreParentScale(true);
 
-		Vec2 Resolution = CDevice::GetInst()->GetRenderResolution();//Vec2(CRenderMgr::GetInst()->GetMainCamWidth(), CRenderMgr::GetInst()->GetMainCamHeight());
+		Vec2 Resolution = CDevice::GetInst()->GetRenderResolution();
 		Vec2 MousePos = CKeyMgr::GetInst()->GetMousePos();
 
 		Vec2 Win_MousePos = Vec2(MousePos.x - Resolution.x / 2.f, -MousePos.y + Resolution.y / 2.f);

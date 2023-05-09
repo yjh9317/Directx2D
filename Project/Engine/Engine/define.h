@@ -262,4 +262,6 @@ enum class PLAYER_TYPE
 	FALL,
 	HIT,
 	DEAD,
+
+	WAIT,
 };

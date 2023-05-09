@@ -10,6 +10,7 @@ private:
     bool    m_Atk;
     bool    m_Dir;
 
+
     bool    m_ShootCheck;
     float   m_ShootTime;
 

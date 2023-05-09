@@ -10,6 +10,9 @@ private:
     map<wstring, CGameObject*> m_mapGun;
     CGameObject* m_CurrentGun;
 
+    vector<CGameObject*> m_vHeart;
+    vector<CGameObject*> m_vBullet;
+
     PLAYER_TYPE m_eStateType;
     float       m_fSpeed;
     float       m_fTime;
@@ -23,9 +26,6 @@ private:
     float       m_fDamagedTime;
     bool        m_bDamagedAble;
    
-    vector<CGameObject*> m_vHeart;
-    vector<CGameObject*> m_vBullet;
-
 public:
     virtual void start() override;
     virtual void update() override;

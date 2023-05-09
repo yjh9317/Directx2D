@@ -57,23 +57,13 @@ float4 PS_PostProcess(VTX_OUT _in) : SV_Target
     
     if (IsBind)
     {       
-        ////1 
-        //vScreenUV.y += sin(vScreenUV.x * 3.141592f * 20.f + (fAccTime * 4.f)) * 0.01;
-        ////vScreenUV -= 0.5;
-                
-        //_in.vUV.x += fAccTime * 0.1f;
-        //vScreenUV += (g_noise_cloud.Sample(g_sam_0, _in.vUV).rg - 0.5f) * 0.03f;
-        //vScreenUV = saturate(vScreenUV);
-                
-        //vOutColor = PostProcessTarget.Sample(g_sam_1, vScreenUV);
-        
         float t = clamp(fAccTime / 6., 0., 1.);
 
         float2 coords = vScreenUV;
         float2 dir = coords - float2(0.5,0.5);
 	
         float dist = distance(coords, float2(0.5,0.5));
-        float2 offset = dir * (sin(dist * 20. - DistortionTime * 20.) + 0.5) / 20.f;
+        float2 offset = dir * (sin(dist * 20. - DistortionTime * 20.) + 0.5) / 12.f;
         if (dist < DistortionDist)
             discard;
         

@@ -22,15 +22,14 @@ private:
 
 public:
     virtual void update() override;
-
     virtual void OnCollisionEnter(CGameObject* _pOtherObj) override;
 
-
-    CLONE(CIceGunScript)
-
+   CLONE(CIceGunScript)
 
 public:
     CIceGunScript();
     ~CIceGunScript();
+
+
 };
 

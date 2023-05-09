@@ -6,7 +6,9 @@ class CCameraMoveScript :
 {
 private:
     CGameObject*    m_Filter;
+    CGameObject*    m_pPlayer;
     float           m_fCamSpeed;
+    float           m_fEventTime;
 
     bool            m_PlayerTrace;
 
